@@ -7,6 +7,17 @@ screen = pygame.display.set_mode((800,400))
 
 clock = pygame.time.Clock()
 
+#gameplay variables
+plr_lvl = 1
+plr_dmg = plr_lvl
+plr_health = 100
+wave = 1
+current_exp = 0
+enemy_dmg = 5
+enemy_health = 3
+castle_health = 100
+enemies_left = 1
+
 
 
 while True:
@@ -15,15 +26,10 @@ while True:
             pygame.quit()
             exit()
             
-            
+    
             
     pygame.display.update()
     clock.tick(60)
-
-
-
-
-
 
 
 #structure of game:
