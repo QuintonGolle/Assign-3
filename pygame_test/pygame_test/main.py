@@ -42,30 +42,8 @@ pygame.mixer.music.play(-1,0.0)
 
 blue = (0,0,128)
 font = pygame.font.SysFont('freesansbold.ttf', 32)
-
-#the entity positions initially
-player_pos = [200, 376]
-enemy_pos = [700, 376]
-
-#variables initial values
-plr_lvl = 1
-plr_dmg = plr_lvl
-plr_health = 100
-wave = 1
-current_exp = 0
-enemy_dmg = 5
-enemy_health = 3
-castle_health = 100
-enemies_left = 1
-player_gravity = 0
-plr_att_cd = 0
-enemy_cd = 0
-player_dir = "right"
-enemy_dir = "left"
-enemies_to_spawn = 3
-new_wave = True
-game_over = False
-kill_enemy = False
+diff_font = pygame.font.SysFont('freesansbold.ttf', 18)
+# remember to add this for player health
 
 
 def enemy_animate(enemy_cd, enemy):
@@ -92,6 +70,7 @@ def enemy_animate(enemy_cd, enemy):
 def player_animate(plr_att_cd, player):
     global enemy_health
     global kill_enemy
+    global score
     if plr_att_cd == 59:
         #add first animation frame
         player = player_sprites[1]
@@ -106,8 +85,8 @@ def player_animate(plr_att_cd, player):
                 enemy_pos[0] = 700
                 enemy_health = 3
                 lizard_death.play()
-            
-        #check for damage
+                score = score + 1 
+
         
     if plr_att_cd == 35:
         player = player_sprites[0]
@@ -115,169 +94,189 @@ def player_animate(plr_att_cd, player):
     # print(plr_health)
     return player
 
+for i in range(180):
     
-    
-#main game loop
-while True:
-    if game_over == False:
-        #runs every time an action is made in the game window
-        for event in pygame.event.get():
-            #checks if that action is trying to quit the game
-            if event.type == pygame.QUIT:
-                #quits the pygame instance and then kills the code with exit()
-                pygame.quit()
-                exit()
-        
-        
-        #puts all the surfaces on the screen with variable positions, also linked to collisions
-        screen.blit(background, (0,0))
-        screen.blit(castle, (0,-15))
-        
-        #setup the ground and the collision for it
-        screen.blit(platform, (190,376))
-        platform_rect = platform.get_rect(topleft = (190,376))
-        
-        enemy_collision = enemy.get_rect(midbottom = (enemy_pos[0],enemy_pos[1]))
-        screen.blit(enemy, enemy_collision)
-        
-        #set up the player and the collision for it
-        plr_collision = player.get_rect(midbottom = (player_pos[0],player_pos[1]))
-        screen.blit(player, plr_collision)
-        
-        
-        #checks if the player has collided with the ground (true/false)
-        onGround = plr_collision.colliderect(platform_rect)
-        
-        #makes an array of all the key presses
-        keys = pygame.key.get_pressed()
-        
-        #moves the player left when they press A
-        if keys[pygame.K_a] and player_pos[0] > 197:
-            player_pos[0] -= 3
-            if player_dir == "right":
-                player = pygame.transform.flip(player, True, False)
-                player_dir = "left"
-        
-        #moves the player right when they press D
-        if keys[pygame.K_d] and player_pos[0] < 668:
-            player_pos[0] += 3
-            if player_dir == "left":
-                player = pygame.transform.flip(player, True, False)
-                player_dir = "right"
-        
-        #makes the player jump when they press space as long as they are on the ground
-        if keys[pygame.K_SPACE] and onGround == True:
-            #makes the gravity negative so it moves the player up in a jumping fashion
-            player_gravity = -13
-            player_pos[1] += player_gravity
-        
-        #moves the player down at an amount that increases the longer they are in the air, only if they are not on the ground
-        if onGround == False:
-            player_gravity += 1
-            player_pos[1] += player_gravity
-        
-        #does the attack process if the right control key is pressed and the attack isnt on cooldown
-        if keys[pygame.K_RCTRL] and plr_att_cd == 0:
-            slash = pygame.mixer.Sound("pygame_test/assets/slash.ogg")
-            slash.set_volume(0.3)
-            slash.play()        
-            #sets the cooldown to 1 second
-            plr_att_cd = 60
-            
-            
-        
-        #lowers the attack cooldown every frame (60 times a second)
-        if plr_att_cd > 0:
-            player = player_animate(plr_att_cd, player)
-            plr_att_cd -= 1
-            
-        
-        #calculates the distance from the player to the enemy
-        x_diff = enemy_pos[0] - player_pos[0]
-        y_diff = enemy_pos[1] - player_pos[1]
-        
-        #checkis if a player is far away, if they are then walk to the castle
-        if (x_diff > 40 or x_diff < -40) and (y_diff < 10 or y_diff > -10):
-            enemy_pos[0] -= 2
-            #changes the direction of the enemy image to correspond with movement direction
-            if enemy_dir == "right":
-                enemy = pygame.transform.flip(enemy, True, False)
-                enemy_dir = "left"
-        #if they are close, and in the negative direction, then walk in the negative direction
-        elif x_diff > 20:
-            enemy_pos[0] -= 2
-            if enemy_dir == "right":
-                enemy = pygame.transform.flip(enemy, True, False)
-                enemy_dir = "left"
-        #if they are close, and in the positive direction, then walk in the positive direction
-        elif x_diff < -20:
-            enemy_pos[0] += 2
-            if enemy_dir == "left":
-                enemy = pygame.transform.flip(enemy, True, False)
-                enemy_dir = "right"
-        
-        
-        
-        if enemy_cd == 0 and ((x_diff > 15 and x_diff < 40)  or (x_diff < -15 and x_diff > -40)):
-            enemy_cd = 180
-        
-        # print(plr_att_cd)
-        #print(near)
-        # print(enemy_health)
-            
-        if enemy_cd > 0:
-            enemy = enemy_animate(enemy_cd, enemy)
-            enemy_cd -= 1
-            if plr_health <= 0:
-                game_over = True
-                
-        if enemy_pos[0] < 197:
-            castle_health = castle_health - 10
-            enemy_pos[0] = 700
-        
-        print(castle_health)
-    else:
-        text = font.render('Game Over', False, (0, 0, 0))
-        screen.blit(text, (360, 200))
+    titlescreen_1  = font.render('A = Left', True,(255,255,255))
+    screen.blit(titlescreen_1, (0,0))
+    titlescreen_2  = font.render('D = Right', True,(255,255,255))
+    screen.blit(titlescreen_2, (0,20))
+    titlescreen_3  = font.render('Space = Jump', True,(255,255,255))
+    screen.blit(titlescreen_3, (0,40))
+    titlescreen_4  = font.render('Right ctrl = Player Attack', True,(255,255,255))
+    screen.blit(titlescreen_4, (0,60))
 
-        
-
-    #updates the display
     pygame.display.update()
-    #utilizes the clock function to make sure the while loop only runs 60 times a second (60fps)
     clock.tick(60)
+   
 
+#while loop to reset game    
+while True:    
+    #variables initial values
+    game_over = False
+    plr_lvl = 1
+    plr_dmg = plr_lvl
+    plr_health = 100
+    score = 0
+    current_exp = 0
+    enemy_dmg = 5
+    enemy_health = 3
+    castle_health = 100
+    enemies_left = 1
+    player_gravity = 0
+    plr_att_cd = 0
+    enemy_cd = 0
+    player_dir = "right"
+    enemy_dir = "left"
+    enemies_to_spawn = 3
+    new_wave = True
+    game_over = False
+    kill_enemy = False
 
+    #the entity positions initially
+    player_pos = [200, 376]
+    enemy_pos = [700, 376]
 
+    while True:
+        if game_over == False:
+            #runs every time an action is made in the game window
+            for event in pygame.event.get():
+                #checks if that action is trying to quit the game
+                if event.type == pygame.QUIT:
+                    #quits the pygame instance and then kills the code with exit()
+                    pygame.quit()
+                    exit()
+            
+            
+            #puts all the surfaces on the screen with variable positions, also linked to collisions
+            screen.blit(background, (0,0))
+            screen.blit(castle, (0,-15))
+            
+            #setup the ground and the collision for it
+            screen.blit(platform, (190,376))
+            platform_rect = platform.get_rect(topleft = (190,376))
+            
+            enemy_collision = enemy.get_rect(midbottom = (enemy_pos[0],enemy_pos[1]))
+            screen.blit(enemy, enemy_collision)
+            
+            #set up the player and the collision for it
+            plr_collision = player.get_rect(midbottom = (player_pos[0],player_pos[1]))
+            screen.blit(player, plr_collision)
+            
+            
+            #checks if the player has collided with the ground (true/false)
+            onGround = plr_collision.colliderect(platform_rect)
+            
+            #makes an array of all the key presses
+            keys = pygame.key.get_pressed()
+            
+            #moves the player left when they press A
+            if keys[pygame.K_a] and player_pos[0] > 197:
+                player_pos[0] -= 3
+                if player_dir == "right":
+                    player = pygame.transform.flip(player, True, False)
+                    player_dir = "left"
+            
+            #moves the player right when they press D
+            if keys[pygame.K_d] and player_pos[0] < 668:
+                player_pos[0] += 3
+                if player_dir == "left":
+                    player = pygame.transform.flip(player, True, False)
+                    player_dir = "right"
+            
+            #makes the player jump when they press space as long as they are on the ground
+            if keys[pygame.K_SPACE] and onGround == True:
+                #makes the gravity negative so it moves the player up in a jumping fashion
+                player_gravity = -13
+                player_pos[1] += player_gravity
+            
+            #moves the player down at an amount that increases the longer they are in the air, only if they are not on the ground
+            if onGround == False:
+                player_gravity += 1
+                player_pos[1] += player_gravity
+            
+            #does the attack process if the right control key is pressed and the attack isnt on cooldown
+            if keys[pygame.K_RCTRL] and plr_att_cd == 0:
+                slash = pygame.mixer.Sound("pygame_test/assets/slash.ogg")
+                slash.set_volume(0.3)
+                slash.play()        
+                #sets the cooldown to 1 second
+                plr_att_cd = 60
+                
+                
+            
+            #lowers the attack cooldown every frame (60 times a second)
+            if plr_att_cd > 0:
+                player = player_animate(plr_att_cd, player)
+                plr_att_cd -= 1
+                
+            
+            #calculates the distance from the player to the enemy
+            x_diff = enemy_pos[0] - player_pos[0]
+            y_diff = enemy_pos[1] - player_pos[1]
+            
+            #checkis if a player is far away, if they are then walk to the castle
+            if (x_diff > 40 or x_diff < -40) and (y_diff < 10 or y_diff > -10):
+                enemy_pos[0] -= 2
+                #changes the direction of the enemy image to correspond with movement direction
+                if enemy_dir == "right":
+                    enemy = pygame.transform.flip(enemy, True, False)
+                    enemy_dir = "left"
+            #if they are close, and in the negative direction, then walk in the negative direction
+            elif x_diff > 20:
+                enemy_pos[0] -= 2
+                if enemy_dir == "right":
+                    enemy = pygame.transform.flip(enemy, True, False)
+                    enemy_dir = "left"
+            #if they are close, and in the positive direction, then walk in the positive direction
+            elif x_diff < -20:
+                enemy_pos[0] += 2
+                if enemy_dir == "left":
+                    enemy = pygame.transform.flip(enemy, True, False)
+                    enemy_dir = "right"
+            
+            
+            
+            if enemy_cd == 0 and ((x_diff > 15 and x_diff < 40)  or (x_diff < -15 and x_diff > -40)):
+                enemy_cd = 180
+            
+            # print(plr_att_cd)
+            #print(near)
+            # print(enemy_health)
+                
+            if enemy_cd > 0:
+                enemy = enemy_animate(enemy_cd, enemy)
+                enemy_cd -= 1
+                if plr_health <= 0:
+                    for i in range(300):
+                        t_seconds = i / 60
+                        text = font.render('Game Over', False, (0, 0, 0))
+                        timer = font.render('Restarting...' , False, (0, 0, 0))
+                        screen.blit(text, (360, 200))
+                        screen.blit(timer, (360, 220))
+                        game_over = True
+                        #updates the display
+                        pygame.display.update()
+                        #utilizes the clock function to make sure the while loop only runs 60 times a second (60fps)
+                        clock.tick(60)
+                    
+            if enemy_pos[0] < 197:
+                castle_health = castle_health - 10
+                enemy_pos[0] = 700
+                
+        else:
+            break    
+        
+        health = font.render('Castle health '+ str(castle_health), True, (0, 0, 0))
+        screen.blit(health, (0,0))
 
+        player_health = diff_font.render('health: '+str(plr_health),True,(0,0,0) )
+        screen.blit(player_health, (player_pos[0]-25,player_pos[1]- 25))
 
+        game_score = font.render('score: ' +str(score), True,(0,0,0))
+        screen.blit(game_score, (500,0))
+    
 
-
-#structure of game:
-
-#set up player movement controller (left, right, jump)
-#set up the attack animation (played on left mouse click)
-
-#set wave, plr_lvl variable to 1 at the beginning of program
-#show the current wave at the top left of the screen
-#show "[LEVEL] Knight [HP]" above the characters head
-
-#summon monsters on random platforms equal to the current wave + 2 (up for change)
-#add 25 to player xp when an enemy is killed by the player
-#the enemies deal 5 damage to the player, and 5 to the castle
-#
-#formula for calculating level
-# current_exp = 200
-# def experience(level):
-# 
-#     exp = 0
-#     for i in range(1, level):
-#         exp += (i + 300 * 2 ** (i / 7)) // 4
-#     if current_exp >= exp:
-#         level = level + 1
-#     return int(level)
-# current_lvl = experience(3)
-
-#once there are no more enemies left in a single wave, begin the next wave
-# continute this process until the player, or the castle has died
-#quit the game
+        #updates the display
+        pygame.display.update()
+        #utilizes the clock function to make sure the while loop only runs 60 times a second (60fps)
+        clock.tick(60)
