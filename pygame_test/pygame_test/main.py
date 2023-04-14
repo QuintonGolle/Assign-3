@@ -137,8 +137,8 @@ while True:
     enemy_pos = [700, 376]
     #the main game while loop      
     while True:
-          #checks if the game has ended or not
-          if game_over == False:
+        #checks if the game has ended or not
+        if game_over == False:
             #runs every time an action is made in the game window
             for event in pygame.event.get():
                 #checks if that action is trying to quit the game
@@ -282,7 +282,7 @@ while True:
 
         game_score = font.render('score: ' +str(score), True,(0,0,0))
         screen.blit(game_score, (500,0))
-    
+
 
         #updates the display
         pygame.display.update()
